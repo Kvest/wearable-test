@@ -8,4 +8,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Notifications test"/>
+    <Button
+        android:id="@+id/data_items_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DataItems test" />
+    <Button
+        android:id="@+id/messages_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Messages test" />
 </LinearLayout>

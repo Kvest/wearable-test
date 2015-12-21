@@ -25,6 +25,12 @@ public class MainActivity extends AppCompatActivity {
                 showNotificationsActivity();
             }
         });
+        findViewById(R.id.data_items_test).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DataItemsTestActivity.start(MainActivity.this);
+            }
+        });
     }
 
     private void showNotificationsActivity() {

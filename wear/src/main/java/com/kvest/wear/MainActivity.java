@@ -28,6 +28,12 @@ public class MainActivity extends Activity {
                         UniversalLayoutActivity.start(MainActivity.this);
                     }
                 });
+                findViewById(R.id.data_items_test).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        DataItemsTestActivity.start(MainActivity.this);
+                    }
+                });
             }
         });
 

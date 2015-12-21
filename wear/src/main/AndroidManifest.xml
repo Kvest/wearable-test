@@ -25,6 +25,8 @@
             android:theme="@style/AppTheme"/>
         <activity
             android:name="android.support.wearable.activity.ConfirmationActivity" />
+        <activity
+            android:name=".DataItemsTestActivity"/>
     </application>
 
 </manifest>

@@ -6,10 +6,25 @@
     tools:context=".MainActivity"
     tools:deviceIds="wear_round">
 
-    <Button
-        android:id="@+id/start"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Start" />
+        android:layout_gravity="center">
+        <Button
+            android:id="@+id/start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start" />
+        <Button
+            android:id="@+id/data_items_test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DataItems test" />
+        <Button
+            android:id="@+id/messages_test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Messages test" />
+    </LinearLayout>
 </FrameLayout>
