@@ -12,6 +12,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dip"
+        android:enabled="false"
         android:gravity="center"
         android:text="Increment"/>
+    <Button
+        android:id="@+id/delete_count"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dip"
+        android:gravity="center"
+        android:text="Delete"
+        android:enabled="false"/>
 </LinearLayout>

@@ -1,5 +1,6 @@
 package com.kvest.wearabletest.ui.acticity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,12 +11,11 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataItemBuffer;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.PutDataMapRequest;
@@ -26,12 +26,14 @@ import com.kvest.wearabletest.R;
 /**
  * Created by roman on 12/18/15.
  */
-public class DataItemsTestActivity extends AppCompatActivity {
+public class DataItemsTestActivity extends AppCompatActivity implements DataApi.DataListener {
+    private static final String TAG = "DataItemsTestActivity";
     private static final String COUNT_PATH = "/count";
     private static final String COUNT_KEY = "count";
 
-    private int count = 0;
+    private int count;
     private TextView countView;
+    private GoogleApiClient mGoogleApiClient;
 
     public static void start(Context context) {
         Intent intent = new Intent(context, DataItemsTestActivity.class);
@@ -44,6 +46,53 @@ public class DataItemsTestActivity extends AppCompatActivity {
         setContentView(R.layout.data_items_test_activity);
 
         init();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(Bundle connectionHint) {
+                        Log.d(TAG, "onConnected: " + connectionHint);
+                        Wearable.DataApi.addListener(mGoogleApiClient, DataItemsTestActivity.this);
+                        findViewById(R.id.increment_count).setEnabled(true);
+                        findViewById(R.id.delete_count).setEnabled(true);
+
+                        restoreCount();
+                    }
+                    @Override
+                    public void onConnectionSuspended(int cause) {
+                        Log.d(TAG, "onConnectionSuspended: " + cause);
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(ConnectionResult result) {
+                        Log.d(TAG, "onConnectionFailed: " + result);
+                    }
+                })
+                        // Request access only to the Wearable API
+                .addApi(Wearable.API)
+                .build();
+    }
+
+    private void restoreCount() {
+        if (mGoogleApiClient.isConnected()) {
+            Wearable.DataApi.getDataItems(mGoogleApiClient)
+                    .setResultCallback(new ResultCallback<DataItemBuffer>() {
+                        @Override
+                        public void onResult(DataItemBuffer result) {
+                            for (int i = 0; i < result.getCount(); ++i) {
+                                if (COUNT_PATH.equals(result.get(i).getUri().getPath())) {
+                                    DataMap dataMap = DataMapItem.fromDataItem(result.get(i)).getDataMap();
+                                    updateCount(dataMap.getInt(COUNT_KEY));
+
+                                    break;
+                                }
+                            }
+
+                            result.close();
+                        }
+                    });
+        }
     }
 
     private void init() {
@@ -51,19 +100,90 @@ public class DataItemsTestActivity extends AppCompatActivity {
         findViewById(R.id.increment_count).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //incrementCount();
+                incrementCount();
+            }
+        });
+        findViewById(R.id.delete_count).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteCount();
             }
         });
 
-        updateCount(getCurrentCount());
+        updateCount(0);
     }
 
-    private int getCurrentCount() {
-        //TODO
-        //try to load old value
-        return 0;
+    private void deleteCount() {
+        if (mGoogleApiClient.isConnected()) {
+            Wearable.DataApi.getDataItems(mGoogleApiClient)
+                    .setResultCallback(new ResultCallback<DataItemBuffer>() {
+                        @Override
+                        public void onResult(DataItemBuffer result) {
+                            for (int i = 0; i < result.getCount(); ++i) {
+                                if (COUNT_PATH.equals(result.get(i).getUri().getPath())) {
+                                    Wearable.DataApi.deleteDataItems(mGoogleApiClient, result.get(i).getUri());
+                                }
+                            }
+
+                            result.close();
+                        }
+                    });
+        }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        mGoogleApiClient.disconnect();
+    }
+
+    private void incrementCount() {
+        PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(COUNT_PATH);
+        putDataMapRequest.getDataMap().putInt(COUNT_KEY, count++);
+        PutDataRequest request = putDataMapRequest.asPutDataRequest();
+
+        Log.d(TAG, "Generating DataItem: " + request);
+        if (!mGoogleApiClient.isConnected()) {
+            return;
+        }
+        Wearable.DataApi.putDataItem(mGoogleApiClient, request)
+                .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
+                    @Override
+                    public void onResult(DataApi.DataItemResult dataItemResult) {
+                        if (!dataItemResult.getStatus().isSuccess()) {
+                            Log.e(TAG, "ERROR: failed to putDataItem, status code: "
+                                    + dataItemResult.getStatus().getStatusCode());
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void onDataChanged(DataEventBuffer dataEvents) {
+        Log.d("KVEST_TAG", "onDataChanged(): " + dataEvents);
+
+        for (DataEvent event : dataEvents) {
+            String path = event.getDataItem().getUri().getPath();
+            if (COUNT_PATH.equals(path)) {
+                if (event.getType() == DataEvent.TYPE_CHANGED) {
+                    DataMap dataMap = DataMapItem.fromDataItem(event.getDataItem()).getDataMap();
+                    updateCount(dataMap.getInt(COUNT_KEY));
+                } else if (event.getType() == DataEvent.TYPE_DELETED) {
+                    updateCount(-1);
+                }
+            } else {
+                Log.d("KVEST_TAG", "Unrecognized path: " + path);
+            }
+        }
+    }
 
     private void updateCount(int newCount) {
         count = newCount;
