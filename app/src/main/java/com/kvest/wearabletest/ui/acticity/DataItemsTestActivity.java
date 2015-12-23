@@ -147,6 +147,7 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
 
     private void incrementCount() {
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(COUNT_PATH);
+        putDataMapRequest.setUrgent();
         putDataMapRequest.getDataMap().putInt(COUNT_KEY, count++);
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
 

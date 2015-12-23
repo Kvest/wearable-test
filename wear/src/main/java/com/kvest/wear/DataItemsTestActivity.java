@@ -129,6 +129,7 @@ public class DataItemsTestActivity extends Activity implements DataApi.DataListe
 
     private void incrementCount() {
         PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(COUNT_PATH);
+        putDataMapRequest.setUrgent();
         putDataMapRequest.getDataMap().putInt(COUNT_KEY, count++);
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
 
