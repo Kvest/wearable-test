@@ -16,7 +16,7 @@ public class MessagesListenerService extends WearableListenerService {
     private static final String MESSAGE_PATH = "/message";
     private static final String MESSAGE_CONFIRMATION_PATH = "/message/confirmation";
     private static final String MESSAGE_KEY = "message";
-    private static final String DATE_KEY = "data";
+    private static final String DATE_KEY = "date";
 
     private GoogleApiClient googleApiClient;
 

@@ -15,6 +15,8 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
@@ -23,17 +25,18 @@ import com.kvest.wearabletest.R;
 /**
  * Created by roman on 12/25/15.
  */
-public class MessagesTestActivity extends AppCompatActivity {
+public class MessagesTestActivity extends AppCompatActivity implements MessageApi.MessageListener {
     private static final String TAG = "DataItemsTestActivity";
     private static final String MESSAGE_PATH = "/message";
     private static final String MESSAGE_CONFIRMATION_PATH = "/message/confirmation";
     private static final String MESSAGE_KEY = "message";
-    private static final String DATE_KEY = "data";
+    private static final String DATE_KEY = "date";
 
     private GoogleApiClient googleApiClient;
 
     private EditText message;
     private ListView sentMessagesList;
+    private MessagesAdapter adapter;
 
     public static void start(Context context) {
         Intent intent = new Intent(context, MessagesTestActivity.class);
@@ -51,6 +54,7 @@ public class MessagesTestActivity extends AppCompatActivity {
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
+                        Wearable.MessageApi.addListener(googleApiClient, MessagesTestActivity.this);
                         Log.d(TAG, "onConnected: " + connectionHint);
                     }
                     @Override
@@ -71,7 +75,10 @@ public class MessagesTestActivity extends AppCompatActivity {
 
     private void init() {
         message = (EditText) findViewById(R.id.message);
+
         sentMessagesList = (ListView) findViewById(R.id.sent_messages);
+        adapter = new MessagesAdapter(this);
+        sentMessagesList.setAdapter(adapter);
 
         message.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -95,13 +102,17 @@ public class MessagesTestActivity extends AppCompatActivity {
 
     private void sendMessage(final String message) {
         if (googleApiClient.isConnected()) {
+            final long date = System.currentTimeMillis();
+            adapter.addMessage(message, date);
+
             Wearable.NodeApi.getConnectedNodes(googleApiClient).setResultCallback(
                     new ResultCallback<NodeApi.GetConnectedNodesResult>() {
                         @Override
                         public void onResult(NodeApi.GetConnectedNodesResult nodes) {
                             Bundle data = new Bundle();
                             data.putString(MESSAGE_KEY, message);
-                            data.putLong(DATE_KEY, System.currentTimeMillis());
+                            data.putLong(DATE_KEY, date);
+
                             byte[] dataRow = Utils.bundle2Bytes(data);
 
                             for (Node node : nodes.getNodes()) {
@@ -123,6 +134,15 @@ public class MessagesTestActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
+        Wearable.MessageApi.removeListener(googleApiClient, this);
         googleApiClient.disconnect();
+    }
+
+    @Override
+    public void onMessageReceived(MessageEvent messageEvent) {
+        if (MESSAGE_CONFIRMATION_PATH.equals(messageEvent.getPath())) {
+            Bundle data = Utils.bytes2Bundle(messageEvent.getData());
+            adapter.markConfirmed(data.getLong(DATE_KEY, -1));
+        }
     }
 }
