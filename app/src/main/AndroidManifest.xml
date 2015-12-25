@@ -17,6 +17,9 @@
         <activity
             android:name=".ui.acticity.DataItemsTestActivity"
             android:screenOrientation="portrait"/>
+        <activity
+            android:name=".ui.acticity.MessagesTestActivity"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

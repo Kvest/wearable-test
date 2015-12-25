@@ -31,6 +31,12 @@ public class MainActivity extends AppCompatActivity {
                 DataItemsTestActivity.start(MainActivity.this);
             }
         });
+        findViewById(R.id.messages_test).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MessagesTestActivity.start(MainActivity.this);
+            }
+        });
     }
 
     private void showNotificationsActivity() {

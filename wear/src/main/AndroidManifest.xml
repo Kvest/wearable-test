@@ -26,6 +26,15 @@
             android:name="android.support.wearable.activity.ConfirmationActivity" />
         <activity
             android:name=".DataItemsTestActivity"/>
+        <activity
+            android:name=".MessagesTestActivity"/>
+
+        <service
+            android:name="com.kvest.wear.MessagesListenerService" >
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

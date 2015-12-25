@@ -1,6 +1,5 @@
 package com.kvest.wearabletest.ui.acticity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,7 +32,7 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
 
     private int count;
     private TextView countView;
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient googleApiClient;
 
     public static void start(Context context) {
         Intent intent = new Intent(context, DataItemsTestActivity.class);
@@ -47,12 +46,12 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
 
         init();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
+        googleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
                         Log.d(TAG, "onConnected: " + connectionHint);
-                        Wearable.DataApi.addListener(mGoogleApiClient, DataItemsTestActivity.this);
+                        Wearable.DataApi.addListener(googleApiClient, DataItemsTestActivity.this);
                         findViewById(R.id.increment_count).setEnabled(true);
                         findViewById(R.id.delete_count).setEnabled(true);
 
@@ -75,8 +74,8 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
     }
 
     private void restoreCount() {
-        if (mGoogleApiClient.isConnected()) {
-            Wearable.DataApi.getDataItems(mGoogleApiClient)
+        if (googleApiClient.isConnected()) {
+            Wearable.DataApi.getDataItems(googleApiClient)
                     .setResultCallback(new ResultCallback<DataItemBuffer>() {
                         @Override
                         public void onResult(DataItemBuffer result) {
@@ -114,14 +113,14 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
     }
 
     private void deleteCount() {
-        if (mGoogleApiClient.isConnected()) {
-            Wearable.DataApi.getDataItems(mGoogleApiClient)
+        if (googleApiClient.isConnected()) {
+            Wearable.DataApi.getDataItems(googleApiClient)
                     .setResultCallback(new ResultCallback<DataItemBuffer>() {
                         @Override
                         public void onResult(DataItemBuffer result) {
                             for (int i = 0; i < result.getCount(); ++i) {
                                 if (COUNT_PATH.equals(result.get(i).getUri().getPath())) {
-                                    Wearable.DataApi.deleteDataItems(mGoogleApiClient, result.get(i).getUri());
+                                    Wearable.DataApi.deleteDataItems(googleApiClient, result.get(i).getUri());
                                 }
                             }
 
@@ -135,14 +134,15 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
     protected void onStart() {
         super.onStart();
 
-        mGoogleApiClient.connect();
+        googleApiClient.connect();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        mGoogleApiClient.disconnect();
+        Wearable.DataApi.removeListener(googleApiClient, DataItemsTestActivity.this);
+        googleApiClient.disconnect();
     }
 
     private void incrementCount() {
@@ -152,10 +152,10 @@ public class DataItemsTestActivity extends AppCompatActivity implements DataApi.
         PutDataRequest request = putDataMapRequest.asPutDataRequest();
 
         Log.d(TAG, "Generating DataItem: " + request);
-        if (!mGoogleApiClient.isConnected()) {
+        if (!googleApiClient.isConnected()) {
             return;
         }
-        Wearable.DataApi.putDataItem(mGoogleApiClient, request)
+        Wearable.DataApi.putDataItem(googleApiClient, request)
                 .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                     @Override
                     public void onResult(DataApi.DataItemResult dataItemResult) {
